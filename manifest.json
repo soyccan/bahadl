@@ -1,0 +1,30 @@
+{
+  "manifest_version": 2,
+
+  "name": "Bahamut Video Downloader",
+  "description": "Bahamut Video Downloader",
+  "version": "1.0",
+
+  "browser_action": {
+    "default_icon": "icon.png",
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "activeTab",
+    "storage",
+    "tabs",
+    "https://ani.gamer.com.tw/*",
+    "webNavigation"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://ani.gamer.com.tw/*", "http://ani.gamer.com.tw/*"],
+      "js": ["jquery-3.3.1.min.js", "contentscript.js"],
+      "all_frames": true
+    }
+  ]
+  // "background": {
+  //   "page": "background.html",
+  //   "persistent": false
+  // }
+}
