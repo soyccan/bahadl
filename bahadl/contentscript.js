@@ -25,7 +25,7 @@ $(function() {
         chrome.runtime.sendMessage({
             info: 'iframeLoadComplete',
             subPageURL: this.src });
-    }).appendTo(document.body).hide();
+    }).appendTo(document.body).css('height', '1px');
 });
 
 chrome.runtime.onMessage.addListener(

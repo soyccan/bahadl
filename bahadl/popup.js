@@ -26,6 +26,7 @@ function getStreamURL(url, tab) {
 
     var ep = episodes.filter(e => e.pageURL == url)[0];
     // if (!ep) getEpisodeURLs(tab);
+    document.getElementById('output').value += '\ngetting video #' + ep.id;
 
     chrome.tabs.sendMessage(
       tab.id,
@@ -47,13 +48,14 @@ function getStreamURL(url, tab) {
         if (ep != null)
             setIframeURL(ep.pageURL, tab);
         else {
-            clearInterval(loading);
+            // clearInterval(loading);
             $('#output').val(episodes.map(e => e.streamURL).join('\n'));
         }
     });
 }
 
 function getEpisodeURLs(tab) {
+    document.getElementById('output').value += '\ngetting video list';
     chrome.tabs.sendMessage(
       tab.id,
       {action: 'getEpisodeURLs', mainPageURL: tab.url},
@@ -80,32 +82,34 @@ function getEpisodeURLs(tab) {
 
 chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
     var currentTab = tabs[0];
+    if (currentTab.url.startsWith('https://ani.gamer.com.tw/animeVideo.php?sn=')) {
 
-    $(function() {
-        $('#cpbtn').click(function() {
-            $('#output').select();
-            if (!document.execCommand('copy'))
-                console.log('copy failed');
+        $(function() {
+            $('#cpbtn').click(function() {
+                $('#output').select();
+                if (!document.execCommand('copy'))
+                    console.log('copy failed');
+            });
+
+            // if (currentTab.url.startsWith('https://ani.gamer.com.tw/animeVideo.php?sn=')) {
+            //     loading = setInterval(function() {
+            //         var output = document.getElementById('output');
+            //         if (0 < output.value.length && output.value.length < 12) // Loading.....
+            //             output.value += '.';
+            //         else
+            //             output.value = 'Loading';
+            //     }, 500);
+            // }
         });
 
-        if (currentTab.url.startsWith('https://ani.gamer.com.tw/animeVideo.php?sn=')) {
-            loading = setInterval(function() {
-                var output = document.getElementById('output');
-                if (0 < output.value.length && output.value.length < 12) // Loading.....
-                    output.value += '.';
-                else
-                    output.value = 'Loading';
-            }, 500);
-        }
-    });
+        chrome.runtime.onMessage.addListener(
+          function(request, sender, sendResponse) {
+            if (request.info == 'iframeLoadComplete' && request.subPageURL) {
+                console.log('receive' +request.info+' '+request.subPageURL);
+                getStreamURL(request.subPageURL, currentTab);
+            }
+        });
 
-    chrome.runtime.onMessage.addListener(
-      function(request, sender, sendResponse) {
-        if (request.info == 'iframeLoadComplete' && request.subPageURL) {
-            console.log('receive' +request.info+' '+request.subPageURL);
-            getStreamURL(request.subPageURL, currentTab);
-        }
-    });
-
-    getEpisodeURLs(currentTab);
+        getEpisodeURLs(currentTab);
+    }
 });

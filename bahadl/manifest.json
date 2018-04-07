@@ -3,10 +3,10 @@
 
   "name": "Bahamut Video Downloader",
   "description": "Bahamut Video Downloader",
-  "version": "1.0",
+  "version": "1.1",
 
   "browser_action": {
-    "default_icon": "apple-touch-icon-144.jpg",
+    "default_icon": "ani.ico",
     "default_popup": "popup.html"
   },
   "permissions": [
