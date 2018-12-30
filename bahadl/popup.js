@@ -17,7 +17,13 @@ function setIframeURL(url, tab) {
 
     chrome.tabs.sendMessage(
         tab.id,
-        {action: 'setIframeURL', mainPageURL: tab.url, subPageURL: url},
+        {
+            from: 'popup',
+            to: 'contentscript',
+            action: 'setIframeURL',
+            mainPageURL: tab.url,
+            subPageURL: url
+        },
         function(_) {});
 }
 
@@ -29,36 +35,48 @@ function getStreamURL(url, tab) {
     document.getElementById('output').value += '\ngetting video #' + ep.id;
 
     chrome.tabs.sendMessage(
-      tab.id,
-      {action: 'getStreamURL', mainPageURL: tab.url, subPageURL: url},
-      function(streamURL) {
-        console.log('receive response getStreamURL: ' + streamURL);
+        tab.id,
+        {
+            from: 'popup',
+            to: 'contentscript',
+            action: 'getStreamURL',
+            mainPageURL: tab.url,
+            subPageURL: url
+        },
+        function(streamURL) {
+            console.log('receive response getStreamURL: ' + streamURL);
 
-        if (streamURL) {
-            ep.streamURL = streamURL;
-            console.log('set episode');
-            console.log(ep);
-        }
-        else {
-            // TODO retry
-            console.log(chrome.runtime.lastError);
-        }
+            if (streamURL) {
+                ep.streamURL = streamURL;
+                console.log('set episode');
+                console.log(ep);
+            }
+            else {
+                // TODO retry
+                console.log(chrome.runtime.lastError);
+            }
 
-        ep = getNotProcessedEpisode();
-        if (ep != null)
-            setIframeURL(ep.pageURL, tab);
-        else {
-            // clearInterval(loading);
-            $('#output').val(episodes.map(e => e.streamURL).join('\n'));
+            ep = getNotProcessedEpisode();
+            if (ep != null)
+                setIframeURL(ep.pageURL, tab);
+            else {
+                // clearInterval(loading);
+                $('#output').val(episodes.map(e => e.streamURL).join('\n'));
+            }
         }
-    });
+    );
 }
 
 function getEpisodeURLs(tab) {
     document.getElementById('output').value += '\ngetting video list';
     chrome.tabs.sendMessage(
       tab.id,
-      {action: 'getEpisodeURLs', mainPageURL: tab.url},
+      {
+        from: 'popup',
+        to: 'contentscript',
+        action: 'getEpisodeURLs',
+        mainPageURL: tab.url
+      },
       function(response) {
         if (response && response.length > 0) {
             for (var i in response) {
@@ -105,8 +123,16 @@ chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
         chrome.runtime.onMessage.addListener(
           function(request, sender, sendResponse) {
             if (request.info == 'iframeLoadComplete' && request.subPageURL) {
-                console.log('receive' +request.info+' '+request.subPageURL);
-                getStreamURL(request.subPageURL, currentTab);
+                console.log('receive');
+                console.log(request);
+                // getStreamURL(request.subPageURL, currentTab);
+            }
+            else if (request.info == 'streamURL') {
+                for (var i in episodes) {
+                    if (episodes[i].pageURL == request.href) {
+                        episodes[i].streamURL = request.streamURL;
+                    }
+                }
             }
         });
 
